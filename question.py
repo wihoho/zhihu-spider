@@ -139,11 +139,8 @@ class UpdateQuestions:
         threads = []
 
         time_now = int(time.time())
-        # before_last_visit_time = time_now - 12*3600
-        # after_add_time = time_now - 24*3600*14
-
         before_last_visit_time = time_now
-        after_add_time = time_now
+        after_add_time = time_now - 24*3600*14
 
         sql = "SELECT LINK_ID from QUESTION WHERE LAST_VISIT < %s AND ADD_TIME > %s AND ANSWER < 8 AND TOP_ANSWER_NUMBER < 50 ORDER BY LAST_VISIT"
 

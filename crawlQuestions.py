@@ -36,6 +36,9 @@ def getFirstPage():
     toUrl = 'http://www.zhihu.com/log/questions'
     content = util.get_content(toUrl, 0)
 
+    if content == "FAIL":
+        raise Exception('Network Problem')
+
     return parsePage(content)
 
 
@@ -47,7 +50,11 @@ def getMoreQuestions(startID, offset=20):
     data['_xsrf'] = 'f476d47f58e70ef838d30d2164d17537'
 
     data = urllib.urlencode(data)
+
     content = util.get_content('http://www.zhihu.com/log/questions', 0, data)
+    if content == "FAIL":
+        raise Exception('Network Problem')
+
     content = json.loads(content)['msg'][1]
 
     return parsePage(content)
@@ -82,23 +89,6 @@ def parsePage(content):
 
     return finalQuestionLinkID, items
 
-
-def main(db, iteration):
-    count = 0
-
-    tempLinkedId, questions = getFirstPage()
-    for q in questions:
-        count += 1
-        q.toInsertSQL(db, count)
-
-    for i in range(iteration):
-        tempLinkedId, questions = getMoreQuestions(tempLinkedId)
-
-        for q in questions:
-            count += 1
-            q.toInsertSQL(db, count)
-
-
 def getDB():
     cf = ConfigParser.ConfigParser()
     cf.read("config.ini")
@@ -116,13 +106,49 @@ def getDB():
 
     return cursor
 
+def main(db, maxCount = 50000):
+    count = 0
 
+    firstPageFlag = True
+
+    while(firstPageFlag):
+
+        try:
+            tempLinkedId, questions = getFirstPage()
+            for q in questions:
+                count += 1
+                q.toInsertSQL(db, count)
+
+            firstPageFlag = False
+
+        except:
+            time.sleep(5)
+
+
+    morePageFlag = True
+
+    while(morePageFlag):
+
+        try:
+            tempLinkedId, questions = getMoreQuestions(tempLinkedId)
+
+            for q in questions:
+                count += 1
+                q.toInsertSQL(db, count)
+
+
+            if count > maxCount:
+                return 
+
+
+        except:
+            time.sleep(5)
 
 
 if __name__ == '__main__':
 
     db = getDB()
-    main(db, 20)
+    main(db)
 
 
 
