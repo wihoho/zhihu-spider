@@ -5,7 +5,7 @@ import StringIO
 import ConfigParser
 
 
-def get_content(toUrl,count):
+def get_content(toUrl,count, data=None):
     """ Return the content of given url
 
         Args:
@@ -31,7 +31,8 @@ def get_content(toUrl,count):
 
     req = urllib2.Request(
         url = toUrl,
-        headers = headers
+        headers = headers,
+        data=data
     )
 
     try:
